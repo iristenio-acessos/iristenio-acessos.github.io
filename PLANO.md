@@ -41,5 +41,8 @@ Google entra depois.
 - Kit de emergência para imprimir (sem senhas).
 - **Resultado:** cofre completo. Cadastrar tudo à mão e apagar a planilha antiga.
 
-## Fase 2 (depois)
-- Desbloqueio por digital/rosto no celular.
+## Fase 2 — Desbloqueio com digital ✅ concluída
+- WebAuthn + extensão PRF: a digital libera um segredo que trava a senha mestra guardada SÓ no aparelho.
+- Ativação por aparelho (Ajustes → Segurança), sempre confirmando a senha mestra.
+- A cada 7 dias pede a senha mestra (para não esquecê-la); trocar a senha mestra desliga a digital.
+- Sem o recurso PRF no aparelho, a digital não é oferecida (não há modo "menos seguro").

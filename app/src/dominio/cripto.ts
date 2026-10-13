@@ -15,13 +15,13 @@ const TEXTO_VERIFICADOR = 'meus-acessos:cofre:v1';
 const codificador = new TextEncoder();
 const decodificador = new TextDecoder();
 
-function paraBase64(bytes: Uint8Array): string {
+export function paraBase64(bytes: Uint8Array): string {
   let s = '';
   for (let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
   return btoa(s);
 }
 
-function deBase64(texto: string): Uint8Array<ArrayBuffer> {
+export function deBase64(texto: string): Uint8Array<ArrayBuffer> {
   const s = atob(texto);
   const bytes = new Uint8Array(s.length);
   for (let i = 0; i < s.length; i++) bytes[i] = s.charCodeAt(i);

@@ -110,7 +110,7 @@ Documentos · Outros. **Você pode criar categorias novas** (ao escolher a categ
 
 ## 5. Decisões tomadas
 
-- Digital/rosto para destrancar: **fica para uma segunda fase**.
+- Digital/rosto para destrancar: feita na **Fase 2** (por aparelho; pede a senha mestra a cada 7 dias).
 - Categorias padrão aprovadas, **com possibilidade de criar outras**.
 - Trancar em **3 minutos**, ajustável.
 - Guardar **tudo** (logins, cartões, Wi-Fi, documentos, veículos, anotações) com **campos livres**.

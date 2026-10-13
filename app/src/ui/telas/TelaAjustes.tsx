@@ -14,6 +14,7 @@ import { OPCOES_MINUTOS_TRANCAR } from '../../dominio/trava';
 import { IconeCadeado } from '../icones';
 import { CartaoCategorias } from './CartaoCategorias';
 import { CartaoCofre } from './CartaoCofre';
+import { BlocoDigital } from './BlocoDigital';
 
 export function TelaAjustes() {
   return (
@@ -61,6 +62,7 @@ function CartaoSeguranca() {
           <IconeCadeado /> Trancar agora
         </button>
       </div>
+      <BlocoDigital />
     </section>
   );
 }

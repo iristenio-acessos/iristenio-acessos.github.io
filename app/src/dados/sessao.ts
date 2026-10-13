@@ -53,7 +53,8 @@ export async function lerTentativas(): Promise<Tentativas> {
 
 export type ResultadoDestrancar = { ok: true } | { ok: false; esperarAte: number; erros: number };
 
-export async function destrancar(senha: string, agora = Date.now()): Promise<ResultadoDestrancar> {
+/** `porDigital`: a senha veio do desbloqueio por digital (não conta como "senha digitada"). */
+export async function destrancar(senha: string, agora = Date.now(), porDigital = false): Promise<ResultadoDestrancar> {
   const tentativas = await lerTentativas();
   if (tentativas.ate > agora) return { ok: false, esperarAte: tentativas.ate, erros: tentativas.erros };
   const cofre = await lerCofre();
@@ -65,6 +66,7 @@ export async function destrancar(senha: string, agora = Date.now()): Promise<Res
     return { ok: false, esperarAte: ate, erros };
   }
   await salvarInterno('_tentativas', undefined);
+  if (!porDigital) await salvarInterno('_ultima_senha', new Date(agora).toISOString());
   chave = k;
   cofreAberto = cofre!;
   avisar();

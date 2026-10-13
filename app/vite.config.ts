@@ -42,5 +42,7 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: ['src/**/*.test.ts'],
+    // A senha mestra usa 600.000 rodadas de propósito (lento); com o computador ocupado, 5 s não bastam
+    testTimeout: 30_000,
   },
 });

@@ -3,7 +3,9 @@ import { useEffect, useState } from 'preact/hooks';
 import { APP } from '../../app.config';
 import { TAMANHO_MINIMO_SENHA, validarSenhaMestra } from '../../dominio/cripto';
 import { criarNovoCofre, destrancar, lerTentativas } from '../../dados/sessao';
-import { IconeCadeado } from '../icones';
+import { IconeCadeado, IconeDigital } from '../icones';
+import { destrancarComDigital, ErroDigital, situacaoAtual } from '../../dados/digital';
+import type { SituacaoDigital } from '../../dominio/digital';
 import { CampoSenha } from '../componentes/CampoSenha';
 import { restaurarDeArquivo } from './CartaoCofre';
 import { useEstado } from '../estado';
@@ -118,9 +120,29 @@ export function TelaTrancado() {
   const [esperarAte, setEsperarAte] = useState(0);
   const [agora, setAgora] = useState(Date.now());
 
+  const [digital, setDigital] = useState<SituacaoDigital>('desligada');
+
   useEffect(() => {
     lerTentativas().then((t) => setEsperarAte(t.ate));
+    situacaoAtual().then((sit) => {
+      setDigital(sit);
+      // Abre a digital sozinho ao chegar na tela (se o usuário cancelar, fica o botão)
+      if (sit === 'pronta' && document.visibilityState === 'visible') usarDigital(true);
+    });
   }, []);
+
+  async function usarDigital(automatico = false) {
+    setOcupado(true);
+    setErro('');
+    try {
+      await destrancarComDigital(); // a tela troca sozinha
+    } catch (x) {
+      setOcupado(false);
+      const msg = x instanceof ErroDigital ? x.message : 'Não foi possível usar a digital.';
+      if (!(automatico && msg === 'Cancelado.')) setErro(msg === 'Cancelado.' ? '' : msg);
+      setDigital(await situacaoAtual());
+    }
+  }
 
   // Contagem regressiva enquanto precisa esperar
   const restante = Math.ceil((esperarAte - agora) / 1000);
@@ -158,6 +180,17 @@ export function TelaTrancado() {
         <button type="submit" class="botao primario" disabled={ocupado || !senha || restante > 0}>
           {ocupado ? 'Abrindo…' : 'Destrancar'}
         </button>
+        {digital === 'pronta' && (
+          <button type="button" class="botao botao-digital" disabled={ocupado || restante > 0} onClick={() => usarDigital()}>
+            <IconeDigital /> Usar a digital
+          </button>
+        )}
+        {digital === 'pedir-senha' && (
+          <p class="dica centro">Por segurança, a cada 7 dias o app pede a senha mestra — assim você não a esquece.</p>
+        )}
+        {digital === 'invalida' && (
+          <p class="dica centro">A senha mestra mudou. Depois de entrar, ative a digital de novo em Ajustes.</p>
+        )}
       </form>
     </div>
   );

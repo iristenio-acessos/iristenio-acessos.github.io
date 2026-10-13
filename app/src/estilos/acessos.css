@@ -232,3 +232,8 @@ input.tamanho { width: 100%; accent-color: var(--primaria); min-height: 32px; }
   .kit-impressao .kit-linhas span { display: block; height: 26pt; border-bottom: 1px solid #555; }
   .kit-impressao .kit-alerta { margin-top: 16pt; padding: 8pt; border: 2px solid #000; font-weight: 600; }
 }
+
+/* ============ Fase 2: digital ============ */
+.cartao-cofre .botao-digital { width: 100%; min-height: 52px; font-size: 17px; }
+.botao-digital svg { width: 24px; height: 24px; }
+.dica.centro { text-align: center; }
