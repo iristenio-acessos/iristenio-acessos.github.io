@@ -124,3 +124,97 @@ export const IconeAlerta = (p: Props) => (
     <path d="M12 9v4M12 17h.01" />
   </Base>
 );
+
+/* ---------------- Cofre ---------------- */
+
+export const IconeCadeado = (p: Props) => (
+  <Base {...p}>
+    <rect x="4.5" y="10.5" width="15" height="10.5" rx="2.5" />
+    <path d="M8 10.5V7.5a4 4 0 0 1 8 0v3M12 15v2" />
+  </Base>
+);
+
+export const IconeCopiar = (p: Props) => (
+  <Base {...p}>
+    <rect x="8.5" y="8.5" width="12" height="12" rx="2.5" />
+    <path d="M15.5 8.5V6a2.5 2.5 0 0 0-2.5-2.5H6A2.5 2.5 0 0 0 3.5 6v7A2.5 2.5 0 0 0 6 15.5h2.5" />
+  </Base>
+);
+
+export const IconeOlho = (p: Props) => (
+  <Base {...p}>
+    <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" />
+    <circle cx="12" cy="12" r="3" />
+  </Base>
+);
+
+export const IconeOlhoFechado = (p: Props) => (
+  <Base {...p}>
+    <path d="M9.9 5.2A10 10 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-2.6 3.5M6.6 6.6C3.7 8.4 2 12 2 12s3.6 7 10 7a9.6 9.6 0 0 0 5.4-1.6" />
+    <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2M3 3l18 18" />
+  </Base>
+);
+
+export const IconeEstrela = (p: Props) => (
+  <Base {...p}>
+    <path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z" />
+  </Base>
+);
+
+export const IconeAbrir = (p: Props) => (
+  <Base {...p}>
+    <path d="M14 4h6v6M20 4l-9 9" />
+    <path d="M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4" />
+  </Base>
+);
+
+export const IconeBusca = (p: Props) => (
+  <Base {...p}>
+    <circle cx="11" cy="11" r="6.5" />
+    <path d="M20 20l-4.3-4.3" />
+  </Base>
+);
+
+export const IconeChave = (p: Props) => (
+  <Base {...p}>
+    <circle cx="7.5" cy="15.5" r="4" />
+    <path d="M10.3 12.7L20 3M16 7l3 3M14 9l2 2" />
+  </Base>
+);
+
+export const IconeCartao = (p: Props) => (
+  <Base {...p}>
+    <rect x="2.5" y="5" width="19" height="14" rx="2.5" />
+    <path d="M2.5 10h19M6.5 15h4" />
+  </Base>
+);
+
+export const IconeWifi = (p: Props) => (
+  <Base {...p}>
+    <path d="M2.5 9a14 14 0 0 1 19 0M5.5 12.5a9.5 9.5 0 0 1 13 0M8.5 16a5 5 0 0 1 7 0" />
+    <path d="M12 19.5h.01" stroke-width={3} />
+  </Base>
+);
+
+export const IconeDocumento = (p: Props) => (
+  <Base {...p}>
+    <rect x="3" y="5" width="18" height="14" rx="2.5" />
+    <circle cx="8.5" cy="11" r="2" />
+    <path d="M5.5 16c.6-1.4 1.6-2 3-2s2.4.6 3 2M14 10h4M14 14h4" />
+  </Base>
+);
+
+export const IconeCarro = (p: Props) => (
+  <Base {...p}>
+    <path d="M3.5 16.5V12l2-5a2 2 0 0 1 1.9-1.3h9.2a2 2 0 0 1 1.9 1.3l2 5v4.5" />
+    <path d="M3.5 12h17M3.5 16.5h17M6 16.5V19M18 16.5V19" />
+    <path d="M7 14.2h.01M17 14.2h.01" stroke-width={2.6} />
+  </Base>
+);
+
+export const IconeNota = (p: Props) => (
+  <Base {...p}>
+    <path d="M6 3h9l4 4v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" />
+    <path d="M14.5 3v4.5H19M8 12h8M8 16h5" />
+  </Base>
+);

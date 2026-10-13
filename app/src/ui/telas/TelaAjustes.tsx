@@ -8,6 +8,9 @@ import { APP } from '../../app.config';
 import { descreverUltimaSync, ROTULO_STATUS, useSync } from '../../sync/ganchos';
 import { useEstado } from '../estado';
 import { aplicarTema } from '../tema';
+import { trancarAgora } from '../trava';
+import { OPCOES_MINUTOS_TRANCAR } from '../../dominio/trava';
+import { IconeCadeado } from '../icones';
 
 export function TelaAjustes() {
   return (
@@ -16,17 +19,56 @@ export function TelaAjustes() {
         <h1>Ajustes</h1>
       </header>
       <div class="conteudo ajustes">
-        <CartaoGoogle />
+        <CartaoSeguranca />
         <CartaoPreferencias />
+        <section class="cartao">
+          <h2>Sincronização com o Google</h2>
+          <p class="dica">
+            Em breve: backup na sua planilha do Google (só com dados criptografados) e os mesmos acessos no celular,
+            tablet e PC. Por enquanto, os dados ficam só neste aparelho.
+          </p>
+        </section>
         <CartaoAparelho />
       </div>
     </>
   );
 }
 
-/* ---------------- Conexão com o Google ---------------- */
+/* ---------------- Segurança ---------------- */
 
-function CartaoGoogle() {
+function CartaoSeguranca() {
+  const config = useConfig();
+  return (
+    <section class="cartao">
+      <h2>Segurança</h2>
+      <div class="preferencias">
+        <label>
+          <span>Trancar sozinho depois de</span>
+          <div class="segmentado pequeno minutos" role="radiogroup" aria-label="Minutos para trancar">
+            {OPCOES_MINUTOS_TRANCAR.map((m) => (
+              <button key={m} type="button" role="radio" aria-checked={config.minutos_trancar === m} onClick={() => salvarConfig({ minutos_trancar: m })}>
+                {m} min
+              </button>
+            ))}
+          </div>
+        </label>
+      </div>
+      <p class="dica">
+        Sem uso por esse tempo, o cofre tranca e pede a senha mestra de novo. Ele também tranca se você sair do app
+        por mais de 1 minuto.
+      </p>
+      <div class="linha">
+        <button class="botao primario" onClick={trancarAgora}>
+          <IconeCadeado /> Trancar agora
+        </button>
+      </div>
+    </section>
+  );
+}
+
+/* ---------------- Conexão com o Google (Etapa 4) ---------------- */
+
+export function CartaoGoogle() {
   const sync = useSync();
   const { avisar, perguntar } = useEstado();
   const [codigo, setCodigo] = useState('');
@@ -163,17 +205,6 @@ function CartaoPreferencias() {
                 {t.rotulo}
               </button>
             ))}
-          </div>
-        </label>
-        <label>
-          <span>A semana começa no</span>
-          <div class="segmentado pequeno">
-            <button role="radio" aria-checked={config.primeiro_dia_semana === 0} onClick={() => mudar({ primeiro_dia_semana: 0 })}>
-              Domingo
-            </button>
-            <button role="radio" aria-checked={config.primeiro_dia_semana === 1} onClick={() => mudar({ primeiro_dia_semana: 1 })}>
-              Segunda
-            </button>
           </div>
         </label>
       </div>

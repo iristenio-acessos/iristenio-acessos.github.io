@@ -93,14 +93,9 @@ Documentos · Outros. **Você pode criar categorias novas** (ao escolher a categ
 10. **Excluir:** exclusão lógica, com **Desfazer**.
 11. **Trocar a senha mestra:** recriptografa todos os itens e sincroniza. Os outros aparelhos passam
     a pedir a senha nova.
-12. **Importar da planilha antiga:** o usuário cola o conteúdo copiado da planilha. As colunas
-    **nome, login, senha, site de acesso/aplicativo, observação** viram itens do tipo Login. Uma
-    aba de veículo (placa, chassi, renavam…) vira itens do tipo Veículo: cada coluna vira um campo.
-    Antes de gravar, o app mostra uma prévia. Tudo é criptografado no aparelho, e depois o app
-    orienta a **apagar a planilha antiga** (inclusive da lixeira do Drive).
-13. **Kit de emergência:** página para imprimir com o passo a passo de recuperação num aparelho
+12. **Kit de emergência:** página para imprimir com o passo a passo de recuperação num aparelho
     novo e um espaço para você anotar à mão uma dica da senha mestra.
-14. **Exportar backup:** um arquivo criptografado (só abre com a senha mestra).
+13. **Exportar backup:** um arquivo criptografado (só abre com a senha mestra).
 
 ## 4. Telas
 
@@ -119,6 +114,8 @@ Documentos · Outros. **Você pode criar categorias novas** (ao escolher a categ
 - Categorias padrão aprovadas, **com possibilidade de criar outras**.
 - Trancar em **3 minutos**, ajustável.
 - Guardar **tudo** (logins, cartões, Wi-Fi, documentos, veículos, anotações) com **campos livres**.
+- **Sem importação** da planilha antiga: os itens serão cadastrados à mão, um a um. Depois de tudo
+  cadastrado, apagar a planilha antiga (inclusive da lixeira do Drive).
 
 ## 6. Limites (sendo honesto)
 

@@ -3,10 +3,11 @@
 // ► Nova entidade? Acrescente a loja em AppDB e crie-a num bloco `if (versaoAntiga < N)`,
 //   aumentando VERSAO. Nunca altere blocos antigos (os aparelhos já instalados dependem deles).
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
-import type { Item, ItemFila } from '../dominio/tipos';
+import type { Cofre, ItemCifrado, ItemFila } from '../dominio/tipos';
 
 export interface AppDB extends DBSchema {
-  itens: { key: string; value: Item };
+  itens: { key: string; value: ItemCifrado };
+  cofre: { key: string; value: Cofre };
   fila_sync: { key: string; value: ItemFila; indexes: { registro_id: string } };
   config: { key: string; value: { chave: string; valor: unknown } };
 }
@@ -24,6 +25,7 @@ export function abrirBanco(): Promise<IDBPDatabase<AppDB>> {
     upgrade(db, versaoAntiga) {
       if (versaoAntiga < 1) {
         db.createObjectStore('itens', { keyPath: 'id' });
+        db.createObjectStore('cofre', { keyPath: 'id' });
         db.createObjectStore('fila_sync', { keyPath: 'id' }).createIndex('registro_id', 'registro_id');
         db.createObjectStore('config', { keyPath: 'chave' });
       }

@@ -5,7 +5,6 @@ import { createRequire } from 'node:module';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { abrirBanco, fecharBanco, NOME_BANCO } from '../dados/db';
 import { buscar, listarFila, salvar, salvarInterno } from '../dados/repositorio';
-import { novoItem } from '../dominio/itens';
 import { baixarTudo, decodificarCodigo, lerEstadoSync, sincronizar } from './motor';
 
 const require = createRequire(import.meta.url);
@@ -40,8 +39,9 @@ beforeEach(async () => {
   await salvarInterno('_conexao', { url: 'https://exemplo/exec', token: TOKEN });
 });
 
-const item = (id: string, titulo: string, atualizado = '2026-01-01T10:00:00.000Z') =>
-  ({ ...novoItem({ id, titulo }), atualizado_em: atualizado, criado_em: atualizado });
+// "cifrado" aqui é só um texto qualquer: o motor não sabe (nem precisa saber) que é criptografado.
+const item = (id: string, cifrado: string, atualizado = '2026-01-01T10:00:00.000Z') =>
+  ({ id, cifrado, status: 'ativo' as const, atualizado_em: atualizado, criado_em: atualizado });
 
 describe('código de conexão', () => {
   it('decodifica o formato APP1', () => {
@@ -53,13 +53,13 @@ describe('código de conexão', () => {
 
 describe('núcleo do backend', () => {
   it('linha ↔ registro preserva tipos', () => {
-    const reg = { ...item('a', 'x'), data: null, hora: '10:00' };
+    const reg = item('a', 'x');
     expect(nucleo.linhaParaRegistro('itens', nucleo.registroParaLinha('itens', reg, 'T'))).toEqual(reg);
   });
   it('versão antiga não sobrescreve a mais nova', () => {
     outroAparelhoEnvia('itens', item('a', 'nova', '2026-01-01T12:00:00.000Z'));
     outroAparelhoEnvia('itens', item('a', 'velha', '2026-01-01T09:00:00.000Z'));
-    expect(tabelas.itens.linhas()[0][1]).toBe('nova');
+    expect(tabelas.itens.linhas()[0][2]).toBe('nova');
   });
 });
 
@@ -68,14 +68,14 @@ describe('sincronização', () => {
     await salvar('itens', item('i1', 'Primeiro'));
     await sincronizar();
     expect(await listarFila()).toHaveLength(0);
-    expect(tabelas.itens.linhas().map((l: string[]) => l[1])).toEqual(['Primeiro']);
+    expect(tabelas.itens.linhas().map((l: string[]) => l[2])).toEqual(['Primeiro']);
     expect(lerEstadoSync().status).toBe('sincronizado');
   });
 
   it('recebe o que outro aparelho enviou, sem devolver à fila', async () => {
     outroAparelhoEnvia('itens', item('i9', 'Do celular'));
     await sincronizar();
-    expect((await buscar('itens', 'i9'))?.titulo).toBe('Do celular');
+    expect((await buscar('itens', 'i9'))?.cifrado).toBe('Do celular');
     expect(await listarFila()).toHaveLength(0);
   });
 
@@ -99,6 +99,6 @@ describe('sincronização', () => {
     await sincronizar();
     await (await abrirBanco()).clear('itens');
     await baixarTudo();
-    expect((await buscar('itens', 'i1'))?.titulo).toBe('a');
+    expect((await buscar('itens', 'i1'))?.cifrado).toBe('a');
   });
 });

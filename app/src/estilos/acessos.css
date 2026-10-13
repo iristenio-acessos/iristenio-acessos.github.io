@@ -1,0 +1,139 @@
+/* ============ Cofre: lista de acessos, painel do item e telas de entrada ============ */
+.botao svg { width: 20px; height: 20px; flex: none; }
+
+/* Aviso amarelo (citado no DESIGN.md, mas ausente no CSS da base) */
+.alerta {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--aviso) 16%, transparent);
+  color: var(--texto);
+  font-size: 15px;
+}
+
+/* ---- Cabeçalho com botão "Trancar" ---- */
+.cabecalho-acoes { align-items: center; }
+.cabecalho-acoes .trancar { margin-left: auto; }
+
+/* ---- Busca ---- */
+.busca {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-left: 14px;
+  margin-bottom: 16px;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: 14px;
+}
+.busca > svg { width: 22px; height: 22px; color: var(--texto-2); flex: none; }
+.busca .campo { background: transparent; border: none; min-height: 52px; }
+.busca .campo::-webkit-search-cancel-button { display: none; }
+.conteudo > .alerta { margin: 0 0 16px; }
+
+/* ---- Lista ---- */
+.lista-acessos { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.linha-acesso {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 68px;
+  padding: 8px 10px 8px 14px;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: 14px;
+  cursor: pointer;
+}
+.linha-acesso.selecionada { border-color: var(--primaria); box-shadow: 0 0 0 1px var(--primaria) inset; }
+.linha-acesso:focus-visible { outline: 2px solid var(--primaria); outline-offset: 2px; }
+.acesso-icone {
+  flex: none;
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: var(--primaria-suave);
+  color: var(--primaria);
+}
+.acesso-icone svg { width: 22px; height: 22px; }
+.linha-item-texto { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.linha-item-texto strong { font-weight: 600; overflow-wrap: anywhere; display: flex; align-items: center; gap: 6px; }
+.linha-item-texto small { color: var(--texto-2); font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.estrela { width: 16px; height: 16px; flex: none; color: var(--aviso); fill: var(--aviso); }
+
+.atalhos { display: flex; gap: 6px; flex: none; }
+.botao-copiar {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--toque);
+  max-width: 150px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: var(--superficie-2);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--texto);
+}
+.botao-copiar svg { width: 18px; height: 18px; flex: none; color: var(--primaria); }
+.botao-copiar span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.botao-copiar.copiado, .botao-icone.copiado { background: var(--sucesso); color: #fff; }
+.botao-copiar.copiado svg, .botao-icone.copiado svg { color: #fff; }
+.botao-copiar:disabled, .botao-icone:disabled { opacity: 0.4; cursor: default; }
+
+/* Celular: atalhos descem para uma segunda linha, ocupando a largura toda */
+@media (max-width: 599px) {
+  .linha-acesso { flex-wrap: wrap; row-gap: 10px; padding: 10px 12px; }
+  .atalhos { flex-basis: 100%; }
+  .atalhos .botao-copiar { flex: 1; max-width: none; justify-content: center; }
+}
+
+/* ---- Painel do item ---- */
+.form-item { gap: 16px; }
+.linha-nome { display: flex; align-items: center; gap: 6px; }
+.favorito.ativo { color: var(--aviso); }
+.favorito.ativo svg { fill: var(--aviso); }
+.rotulo-campo { display: flex; flex-direction: column; gap: 6px; }
+.rotulo-campo > span {
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--texto-2);
+}
+.rotulo-campo select.campo { width: 100%; }
+.campo-com-botoes { display: flex; align-items: center; gap: 2px; }
+.campo-com-botoes .campo { flex: 1; min-width: 0; }
+.campo.secreto { font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace; letter-spacing: 0.02em; }
+
+/* ---- Telas de entrada (criar / destrancar) ---- */
+.tela-cofre {
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  overflow-y: auto;
+}
+.cartao-cofre { width: min(440px, 100%); gap: 16px; padding: 28px 24px; }
+.cofre-topo { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
+.cofre-topo > svg {
+  width: 56px;
+  height: 56px;
+  padding: 12px;
+  border-radius: 18px;
+  background: var(--primaria-suave);
+  color: var(--primaria);
+}
+.cofre-topo h1 { font-size: 24px; }
+.cartao-cofre .botao.primario { width: 100%; min-height: 52px; font-size: 17px; }
+.cartao-cofre .interruptor span { font-size: 15px; }
+
+/* ---- Ajustes da base ---- */
+/* Aviso no rodapé: sem isto ele fica espremido em metade da largura (left: 50%) no celular */
+.aviso { width: max-content; max-width: calc(100vw - 32px); }
+/* "1 min", "10 min"… numa linha só */
+.preferencias .segmentado.minutos { width: 100%; max-width: 360px; }
+.preferencias .segmentado.minutos button { white-space: nowrap; padding: 0 4px; }

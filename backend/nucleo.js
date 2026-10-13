@@ -11,10 +11,15 @@ var VERSAO_API = 1;
 // Campos novos entram SEMPRE no fim da lista (antes de _recebido_em), com migração em garantirEstrutura().
 var ESQUEMA = {
   // ► Nova entidade: acrescente aqui (mesmos campos do tipo em app/src/dominio/tipos.ts).
+  // SEGURANÇA: só chegam aqui dados criptografados no aparelho (coluna "cifrado").
   itens: {
     aba: 'ITENS',
+    campos: [['id', 's'], ['status', 's'], ['cifrado', 's'], ['criado_em', 's'], ['atualizado_em', 's']],
+  },
+  cofre: {
+    aba: 'COFRE',
     campos: [
-      ['id', 's'], ['titulo', 's'], ['descricao', 's'], ['data', 's?'], ['hora', 's?'], ['status', 's'],
+      ['id', 's'], ['sal', 's'], ['rodadas', 'n'], ['verificador', 's'], ['cifrado', 's'],
       ['criado_em', 's'], ['atualizado_em', 's'],
     ],
   },
