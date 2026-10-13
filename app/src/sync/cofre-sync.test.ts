@@ -121,6 +121,47 @@ describe('sincronização do cofre', () => {
     expect(destrancado()).toBe(false);
   });
 
+  it('senha mestra trocada num aparelho: o outro tranca e abre só com a senha nova', async () => {
+    const { trocarSenhaMestra } = await import('../dados/sessao');
+    await aparelhoPrincipalComUmItem();
+    // Aparelho B (simulado depois): por ora, A troca a senha e sincroniza
+    expect(await trocarSenhaMestra(SENHA, 'senha mestra NOVA 2026', 'senha mestra NOVA 2026')).toEqual([]);
+    await sincronizar();
+    expect(JSON.stringify(tabelas.itens.linhas())).not.toMatch(/445566|Caixa/);
+
+    await novoAparelho();
+    await conectarCofre(await prepararConexao(CODIGO));
+    expect((await destrancar(SENHA, 0)).ok).toBe(false);
+    expect((await destrancar('senha mestra NOVA 2026', 0)).ok).toBe(true);
+    const { itens, ilegiveis } = await listarAbertos();
+    expect(ilegiveis).toBe(0);
+    expect(itens[0].conteudo.campos[0].valor).toBe('445566');
+  });
+
+  it('aparelho aberto com a senha antiga tranca ao receber o cofre novo', async () => {
+    const { trocarSenhaMestra } = await import('../dados/sessao');
+    await aparelhoPrincipalComUmItem();
+    await novoAparelho();
+    await conectarCofre(await prepararConexao(CODIGO));
+    await destrancar(SENHA, 0); // aparelho B aberto com a senha antiga
+    expect(destrancado()).toBe(true);
+    // Outro aparelho troca a senha: simula enviando o cofre e os itens novos direto à planilha
+    const { criarCofre } = await import('../dominio/cripto');
+    const { fecharItem } = await import('../dominio/itens');
+    const novo = await criarCofre('senha mestra NOVA 2026');
+    const depois = '2026-12-31T00:00:00.000Z';
+    const item = { ...(await fecharItem(novo.chave, caixa)), atualizado_em: depois };
+    nucleo.processar(tabelas, { acao: 'sincronizar', operacoes: [
+      { id: 'x1', entidade: 'itens', registro_id: 'caixa', operacao: 'alterar', payload: item },
+      { id: 'x2', entidade: 'cofre', registro_id: 'cofre', operacao: 'alterar', payload: { ...novo.cofre, atualizado_em: depois } },
+    ] }, depois);
+    await sincronizar();
+    await new Promise((ok) => setTimeout(ok, 10));
+    expect(destrancado()).toBe(false);
+    expect((await destrancar('senha mestra NOVA 2026', 0)).ok).toBe(true);
+    expect((await listarAbertos()).itens[0].conteudo.campos[0].valor).toBe('445566');
+  });
+
   it('código errado não conecta', async () => {
     await salvarInterno('_conexao', undefined);
     const errado = 'APP1:' + btoa(JSON.stringify({ u: 'https://exemplo/exec', t: 'outro' }));

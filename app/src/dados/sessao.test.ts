@@ -91,3 +91,65 @@ describe('categorias do cofre', () => {
     expect((await lerPreferencias()).categorias).not.toContain('Meus bancos');
   });
 });
+
+describe('trocar a senha mestra', () => {
+  it('a senha nova abre tudo; a antiga não abre mais; nada legível é gravado', async () => {
+    const { trocarSenhaMestra } = await import('./sessao');
+    await criarNovoCofre(SENHA);
+    await gravarItem(caixa());
+    expect(await trocarSenhaMestra('errada errada', 'nova senha mestra boa', 'nova senha mestra boa')).toEqual(['A senha mestra atual está incorreta.']);
+    expect(await trocarSenhaMestra(SENHA, 'curta', 'curta')).toHaveLength(1);
+    expect(await trocarSenhaMestra(SENHA, 'nova senha mestra boa', 'nova senha mestra boa')).toEqual([]);
+    expect(destrancado()).toBe(true); // este aparelho continua aberto
+    expect((await listarAbertos()).itens[0].conteudo.nome).toBe('Caixa Econômica');
+
+    trancar();
+    expect((await destrancar(SENHA, 0)).ok).toBe(false);
+    expect((await destrancar('nova senha mestra boa', 0)).ok).toBe(true);
+    expect((await listarAbertos()).itens[0].conteudo.campos[0].valor).toBe('998877');
+    const db = await abrirBanco();
+    expect(JSON.stringify(await db.getAll('fila_sync'))).not.toMatch(/Caixa|998877|nova senha/);
+  });
+});
+
+describe('backup', () => {
+  it('restaura num aparelho vazio (pede a senha) e recupera itens no mesmo cofre', async () => {
+    const { exportarBackup, restaurarBackup } = await import('./sessao');
+    const { excluirItem } = await import('../ui/acoes/itens');
+    await criarNovoCofre(SENHA);
+    await gravarItem(caixa());
+    const arquivo = await exportarBackup();
+    expect(arquivo).not.toMatch(/Caixa|998877/);
+
+    // Mesmo cofre: item excluído depois do backup NÃO volta (a exclusão é mais nova)
+    await excluirItem((await listarAbertos()).itens[0]);
+    expect(await restaurarBackup(arquivo)).toEqual({ ok: true, cofreNovo: false, itens: 0 });
+
+    // Aparelho vazio
+    trancar();
+    await fecharBanco();
+    await new Promise<void>((ok) => {
+      const req = indexedDB.deleteDatabase(NOME_BANCO);
+      req.onsuccess = req.onerror = req.onblocked = () => ok();
+    });
+    expect(await restaurarBackup(arquivo)).toEqual({ ok: true, cofreNovo: true, itens: 1 });
+    expect(destrancado()).toBe(false);
+    expect((await destrancar(SENHA, 0)).ok).toBe(true);
+    expect((await listarAbertos()).itens[0].conteudo.nome).toBe('Caixa Econômica');
+  });
+
+  it('recusa backup de outro cofre e arquivo inválido', async () => {
+    const { exportarBackup, restaurarBackup } = await import('./sessao');
+    await criarNovoCofre(SENHA);
+    const arquivo = await exportarBackup();
+    trancar();
+    await fecharBanco();
+    await new Promise<void>((ok) => {
+      const req = indexedDB.deleteDatabase(NOME_BANCO);
+      req.onsuccess = req.onerror = req.onblocked = () => ok();
+    });
+    await criarNovoCofre('outra senha mestra');
+    expect((await restaurarBackup(arquivo)).ok).toBe(false);
+    expect((await restaurarBackup('lixo')).ok).toBe(false);
+  });
+});

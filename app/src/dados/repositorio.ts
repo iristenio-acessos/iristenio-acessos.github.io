@@ -103,6 +103,43 @@ export async function gravar(alteracoes: Alteracao[], agora = new Date()): Promi
   return anteriores;
 }
 
+/**
+ * Importa registros (ex.: de um backup) MANTENDO as datas originais: só entra o que for mais novo
+ * que a versão do aparelho. O que entrar vai para a fila (chega à planilha, se conectado).
+ * Retorna quantos registros entraram.
+ */
+export async function importarRegistros(alteracoes: Alteracao[]): Promise<number> {
+  const db = await abrirBanco();
+  const nomes = [...new Set<Entidade | 'fila_sync'>([...alteracoes.map((a) => a.entidade), 'fila_sync'])];
+  const tx = db.transaction(nomes, 'readwrite');
+  const fila = tx.objectStore('fila_sync');
+  let entraram = 0;
+  for (const { entidade, registro } of alteracoes) {
+    const loja = tx.objectStore(entidade);
+    const anterior = (await loja.get(registro.id)) as Registro | undefined;
+    if (anterior && anterior.atualizado_em >= registro.atualizado_em) continue;
+    await loja.put(registro as never);
+    const existente = (await fila.index('registro_id').getAll(registro.id)).find((i) => i.entidade === entidade);
+    await fila.put({
+      id: existente?.id ?? novoId(),
+      entidade,
+      registro_id: registro.id,
+      operacao: existente?.operacao === 'criar' || !anterior ? 'criar' : 'alterar',
+      payload: registro,
+      tentativas: 0,
+      ultimo_erro: null,
+      criado_em: existente?.criado_em ?? new Date().toISOString(),
+    });
+    entraram++;
+  }
+  await tx.done;
+  if (entraram) {
+    avisarMudanca();
+    ouvintesGravacao.forEach((fn) => fn());
+  }
+  return entraram;
+}
+
 export async function salvar<E extends Entidade>(entidade: E, registro: MapaEntidades[E]) {
   const [anterior] = await gravar([{ entidade, registro } as Alteracao]);
   return anterior as MapaEntidades[E] | undefined;

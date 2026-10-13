@@ -2,11 +2,12 @@
 // Trancar = esquecer a chave (e a tela deixa de mostrar qualquer dado aberto).
 import type { Cofre, ItemAberto, ItemCifrado } from '../dominio/tipos';
 import { ID_COFRE } from '../dominio/tipos';
-import { abrirCofre, cifrar, criarCofre, decifrar } from '../dominio/cripto';
+import { abrirCofre, cifrar, criarCofre, decifrar, validarSenhaMestra } from '../dominio/cripto';
+import { lerBackup, montarBackup } from '../dominio/backup';
 import { CATEGORIA_RESERVA, itensDaCategoria, normalizarCategorias, preferenciasPadrao, removerDaLista, renomearNaLista, type PreferenciasCofre } from '../dominio/categorias';
 import { abrirItem, fecharItem } from '../dominio/itens';
 import { esperaAposErros } from '../dominio/trava';
-import { aoMudarDados, apagarCofreLocal, buscar, gravar, lerInterno, listarTodos, salvar, salvarInterno } from './repositorio';
+import { aoMudarDados, apagarCofreLocal, buscar, gravar, importarRegistros, lerInterno, listarTodos, salvar, salvarInterno, type Alteracao } from './repositorio';
 import { cofreTrocou, compararCofres, type SituacaoConexao } from '../dominio/conexao';
 import { confirmarConexao, type PreviaConexao } from '../sync/motor';
 
@@ -198,4 +199,96 @@ export async function conectarCofre(previa: PreviaConexao, trocarCofreDesteApare
     await apagarCofreLocal();
   }
   await confirmarConexao(previa);
+}
+
+/* ---------------- Trocar a senha mestra (RN11) ---------------- */
+
+/**
+ * Cria um cofre novo (sal e chave novos) e criptografa de novo TODOS os itens (inclusive os excluídos)
+ * e as preferências, numa única gravação. Os outros aparelhos trancam ao receber o cofre novo.
+ */
+export async function trocarSenhaMestra(atual: string, nova: string, confirmacao: string): Promise<string[]> {
+  const erros = validarSenhaMestra(nova, confirmacao);
+  if (nova && nova === atual) erros.push('A senha nova precisa ser diferente da atual.');
+  if (erros.length) return erros;
+  const cofre = await lerCofre();
+  const chaveAtual = cofre ? await abrirCofre(cofre, atual) : null;
+  if (!cofre || !chaveAtual) return ['A senha mestra atual está incorreta.'];
+
+  const [cifrados, prefs] = [await listarTodos('itens'), await lerPreferencias()];
+  const abertos = await Promise.all(cifrados.map((i) => abrirItem(chaveAtual, i).catch(() => null)));
+  if (abertos.some((i) => i === null)) {
+    return ['Há itens que não abrem com a senha atual. Sincronize e tente de novo (nada foi alterado).'];
+  }
+  const novo = await criarCofre(nova);
+  const cofreNovo: Cofre = {
+    ...novo.cofre,
+    criado_em: cofre.criado_em,
+    cifrado: await cifrar(novo.chave, JSON.stringify(prefs)),
+  };
+  const itens = await Promise.all((abertos as ItemAberto[]).map((i) => fecharItem(novo.chave, i)));
+
+  // Atualiza a sessão ANTES de gravar, para a vigilância de "cofre trocado" não trancar este aparelho
+  const antes = { chave, cofreAberto };
+  chave = novo.chave;
+  cofreAberto = cofreNovo;
+  try {
+    await gravar([
+      ...itens.map((registro) => ({ entidade: 'itens' as const, registro })),
+      { entidade: 'cofre', registro: cofreNovo },
+    ]);
+  } catch (e) {
+    ({ chave, cofreAberto } = antes);
+    throw e;
+  }
+  // O cofre gravado ganhou novo atualizado_em: guarda o registro final
+  cofreAberto = (await lerCofre()) ?? cofreNovo;
+  avisar();
+  return [];
+}
+
+/* ---------------- Backup (RN13) ---------------- */
+
+/** Conteúdo do arquivo de backup (registros já criptografados). */
+export async function exportarBackup(): Promise<string> {
+  const cofre = await lerCofre();
+  if (!cofre) throw new Error('Não há cofre neste aparelho.');
+  return JSON.stringify(montarBackup(cofre, await listarTodos('itens')), null, 1);
+}
+
+export type ResultadoRestauracao =
+  | { ok: true; cofreNovo: boolean; itens: number }
+  | { ok: false; erro: string };
+
+/**
+ * Restaura um backup:
+ *  - aparelho sem cofre → passa a usar o cofre do backup (depois pede a senha mestra dele);
+ *  - mesmo cofre → acrescenta/recupera os itens (versões mais novas do aparelho são mantidas);
+ *  - cofre diferente → recusa (nunca mistura cofres).
+ */
+export async function restaurarBackup(conteudo: string): Promise<ResultadoRestauracao> {
+  let backup;
+  try {
+    backup = lerBackup(conteudo);
+  } catch (e) {
+    return { ok: false, erro: e instanceof Error ? e.message : String(e) };
+  }
+  const situacao = compararCofres(await lerCofre(), backup.cofre);
+  if (situacao === 'cofres-diferentes') {
+    return {
+      ok: false,
+      erro:
+        'Este backup é de outro cofre (ou de antes de uma troca da senha mestra). Para usá-lo, restaure-o num aparelho sem cofre.',
+    };
+  }
+  if (situacao === 'baixar-cofre' && (await lerInterno('_conexao'))) {
+    return {
+      ok: false,
+      erro: 'Este aparelho está conectado à planilha. Para restaurar um cofre inteiro, desconecte primeiro (Ajustes → Sincronização).',
+    };
+  }
+  const alteracoes: Alteracao[] = backup.itens.map((registro) => ({ entidade: 'itens', registro }));
+  if (situacao === 'baixar-cofre') alteracoes.unshift({ entidade: 'cofre', registro: backup.cofre });
+  const entraram = await importarRegistros(alteracoes);
+  return { ok: true, cofreNovo: situacao === 'baixar-cofre', itens: Math.max(0, entraram - (situacao === 'baixar-cofre' ? 1 : 0)) };
 }

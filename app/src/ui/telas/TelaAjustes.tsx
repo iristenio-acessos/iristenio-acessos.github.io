@@ -13,6 +13,7 @@ import { trancarAgora } from '../trava';
 import { OPCOES_MINUTOS_TRANCAR } from '../../dominio/trava';
 import { IconeCadeado } from '../icones';
 import { CartaoCategorias } from './CartaoCategorias';
+import { CartaoCofre } from './CartaoCofre';
 
 export function TelaAjustes() {
   return (
@@ -25,6 +26,7 @@ export function TelaAjustes() {
         <CartaoCategorias />
         <CartaoPreferencias />
         <CartaoGoogle />
+        <CartaoCofre />
         <CartaoAparelho />
       </div>
     </>

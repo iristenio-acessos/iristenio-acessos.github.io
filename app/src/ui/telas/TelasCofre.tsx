@@ -1,47 +1,13 @@
 // Telas de entrada: criar a senha mestra (primeiro uso) e destrancar o cofre.
-import { useEffect, useRef, useState } from 'preact/hooks';
+import { useEffect, useState } from 'preact/hooks';
 import { APP } from '../../app.config';
 import { TAMANHO_MINIMO_SENHA, validarSenhaMestra } from '../../dominio/cripto';
 import { criarNovoCofre, destrancar, lerTentativas } from '../../dados/sessao';
-import { IconeCadeado, IconeOlho, IconeOlhoFechado } from '../icones';
+import { IconeCadeado } from '../icones';
+import { CampoSenha } from '../componentes/CampoSenha';
+import { restaurarDeArquivo } from './CartaoCofre';
+import { useEstado } from '../estado';
 import { CartaoGoogle } from './TelaAjustes';
-
-function CampoSenha(props: {
-  valor: string;
-  aoMudar: (v: string) => void;
-  rotulo: string;
-  autoFocus?: boolean;
-  novaSenha?: boolean;
-  disabled?: boolean;
-}) {
-  const [visivel, setVisivel] = useState(false);
-  const campo = useRef<HTMLInputElement>(null);
-  useEffect(() => {
-    if (props.autoFocus) campo.current?.focus();
-  }, []);
-  return (
-    <label class="rotulo-campo">
-      <span>{props.rotulo}</span>
-      <div class="campo-com-botoes">
-        <input
-          ref={campo}
-          class="campo secreto"
-          type={visivel ? 'text' : 'password'}
-          value={props.valor}
-          onInput={(e) => props.aoMudar(e.currentTarget.value)}
-          autoComplete={props.novaSenha ? 'new-password' : 'current-password'}
-          autoCapitalize="off"
-          autoCorrect="off"
-          spellcheck={false}
-          disabled={props.disabled}
-        />
-        <button type="button" class="botao-icone" aria-label={visivel ? 'Esconder' : 'Mostrar'} onClick={() => setVisivel(!visivel)}>
-          {visivel ? <IconeOlhoFechado /> : <IconeOlho />}
-        </button>
-      </div>
-    </label>
-  );
-}
 
 /* ---------------- Primeiro uso ---------------- */
 
@@ -68,6 +34,7 @@ export function TelaCriarCofre() {
 }
 
 function FormCriarCofre({ aoConectar }: { aoConectar: () => void }) {
+  const { avisar } = useEstado();
   const [senha, setSenha] = useState('');
   const [confirmacao, setConfirmacao] = useState('');
   const [entendi, setEntendi] = useState(false);
@@ -122,6 +89,20 @@ function FormCriarCofre({ aoConectar }: { aoConectar: () => void }) {
         </button>
         <button type="button" class="link centro" onClick={aoConectar}>
           Já tenho um cofre em outro aparelho
+        </button>
+        <button
+          type="button"
+          class="link centro"
+          onClick={async () => {
+            try {
+              const msg = await restaurarDeArquivo();
+              if (msg) avisar({ texto: msg });
+            } catch (x) {
+              setErros([x instanceof Error ? x.message : String(x)]);
+            }
+          }}
+        >
+          Restaurar de um arquivo de backup
         </button>
       </form>
     </div>

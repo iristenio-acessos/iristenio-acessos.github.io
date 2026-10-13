@@ -214,3 +214,21 @@ input.tamanho { width: 100%; accent-color: var(--primaria); min-height: 32px; }
 .cartao-cofre .link { align-self: center; }
 .link.centro { margin: 0 auto; }
 .cartao-cofre .formulario { gap: 14px; }
+
+/* ============ Etapa 5: cofre e backup, kit de emergência ============ */
+.cartao h3.subtitulo { margin: 18px 0 6px; font-size: 15px; font-weight: 650; }
+.cartao h3.subtitulo:first-of-type { margin-top: 0; }
+.cartao .dica + .linha { margin-top: 10px; }
+
+.kit-impressao { display: none; }
+@media print {
+  html.imprimindo body > *:not(.kit-impressao) { display: none !important; }
+  html.imprimindo, html.imprimindo body { background: #fff !important; color: #000 !important; height: auto; overflow: visible; }
+  .kit-impressao { display: block; font: 12pt/1.45 system-ui, sans-serif; color: #000; padding: 0 8mm; }
+  .kit-impressao h1 { font-size: 20pt; margin: 0 0 4pt; }
+  .kit-impressao h2 { font-size: 13pt; margin: 14pt 0 4pt; border-bottom: 1px solid #999; padding-bottom: 2pt; }
+  .kit-impressao .kit-sub { color: #333; margin: 0 0 6pt; }
+  .kit-impressao li { margin-bottom: 3pt; }
+  .kit-impressao .kit-linhas span { display: block; height: 26pt; border-bottom: 1px solid #555; }
+  .kit-impressao .kit-alerta { margin-top: 16pt; padding: 8pt; border: 2px solid #000; font-weight: 600; }
+}
