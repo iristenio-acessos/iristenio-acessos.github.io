@@ -22,7 +22,7 @@ Google entra depois.
 - Ajustes → Categorias: criar, renomear (os itens acompanham) e remover (os itens vão para "Outros").
 - **Resultado:** o cofre completo num aparelho.
 
-## Etapa 3 — Publicar e instalar
+## Etapa 3 — Publicar e instalar ✅ publicado em https://iristenio-acessos.github.io/
 - Criar a organização e o repositório no GitHub (você faz no navegador, com as instruções).
 - Publicar e **instalar no celular, tablet e PC**.
 - **Resultado:** o app instalado nos aparelhos (cada um com dados separados por enquanto).
