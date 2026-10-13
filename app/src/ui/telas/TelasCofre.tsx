@@ -4,6 +4,7 @@ import { APP } from '../../app.config';
 import { TAMANHO_MINIMO_SENHA, validarSenhaMestra } from '../../dominio/cripto';
 import { criarNovoCofre, destrancar, lerTentativas } from '../../dados/sessao';
 import { IconeCadeado, IconeOlho, IconeOlhoFechado } from '../icones';
+import { CartaoGoogle } from './TelaAjustes';
 
 function CampoSenha(props: {
   valor: string;
@@ -45,6 +46,28 @@ function CampoSenha(props: {
 /* ---------------- Primeiro uso ---------------- */
 
 export function TelaCriarCofre() {
+  const [modo, setModo] = useState<'criar' | 'conectar'>('criar');
+  if (modo === 'conectar') {
+    return (
+      <div class="tela-cofre">
+        <div class="cartao cartao-cofre">
+          <div class="cofre-topo">
+            <IconeCadeado />
+            <h1>{APP.nome}</h1>
+            <p class="dica">Usar o cofre que já existe em outro aparelho.</p>
+          </div>
+          <CartaoGoogle naEntrada />
+          <button type="button" class="link" onClick={() => setModo('criar')}>
+            ← Voltar e criar um cofre novo
+          </button>
+        </div>
+      </div>
+    );
+  }
+  return <FormCriarCofre aoConectar={() => setModo('conectar')} />;
+}
+
+function FormCriarCofre({ aoConectar }: { aoConectar: () => void }) {
   const [senha, setSenha] = useState('');
   const [confirmacao, setConfirmacao] = useState('');
   const [entendi, setEntendi] = useState(false);
@@ -96,6 +119,9 @@ export function TelaCriarCofre() {
 
         <button type="submit" class="botao primario" disabled={ocupado}>
           {ocupado ? 'Criando o cofre…' : 'Criar meu cofre'}
+        </button>
+        <button type="button" class="link centro" onClick={aoConectar}>
+          Já tenho um cofre em outro aparelho
         </button>
       </form>
     </div>

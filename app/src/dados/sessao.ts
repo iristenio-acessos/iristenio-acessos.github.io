@@ -6,9 +6,13 @@ import { abrirCofre, cifrar, criarCofre, decifrar } from '../dominio/cripto';
 import { CATEGORIA_RESERVA, itensDaCategoria, normalizarCategorias, preferenciasPadrao, removerDaLista, renomearNaLista, type PreferenciasCofre } from '../dominio/categorias';
 import { abrirItem, fecharItem } from '../dominio/itens';
 import { esperaAposErros } from '../dominio/trava';
-import { buscar, gravar, lerInterno, listarTodos, salvar, salvarInterno } from './repositorio';
+import { aoMudarDados, apagarCofreLocal, buscar, gravar, lerInterno, listarTodos, salvar, salvarInterno } from './repositorio';
+import { cofreTrocou, compararCofres, type SituacaoConexao } from '../dominio/conexao';
+import { confirmarConexao, type PreviaConexao } from '../sync/motor';
 
 let chave: CryptoKey | null = null;
+/** Sal e verificador do cofre que foi destrancado (para perceber se ele foi trocado por outro aparelho). */
+let cofreAberto: Pick<Cofre, 'sal' | 'verificador'> | null = null;
 const ouvintes = new Set<() => void>();
 
 export function aoMudarSessao(fn: () => void): () => void {
@@ -30,6 +34,7 @@ export async function criarNovoCofre(senha: string) {
   const novo = await criarCofre(senha);
   await salvar('cofre', novo.cofre);
   chave = novo.chave;
+  cofreAberto = novo.cofre;
   avisar();
 }
 
@@ -60,6 +65,7 @@ export async function destrancar(senha: string, agora = Date.now()): Promise<Res
   }
   await salvarInterno('_tentativas', undefined);
   chave = k;
+  cofreAberto = cofre!;
   avisar();
   return { ok: true };
 }
@@ -67,8 +73,15 @@ export async function destrancar(senha: string, agora = Date.now()): Promise<Res
 export function trancar() {
   if (!chave) return;
   chave = null;
+  cofreAberto = null;
   avisar();
 }
+
+// Se a sincronização trouxer um cofre diferente do que está aberto (ex.: senha mestra trocada em
+// outro aparelho), tranca: a chave atual não abriria os itens novos.
+aoMudarDados(async () => {
+  if (cofreAberto && cofreTrocou(cofreAberto, await lerCofre())) trancar();
+});
 
 function chaveAtual(): CryptoKey {
   if (!chave) throw new Error('O cofre está trancado.');
@@ -151,4 +164,38 @@ export async function removerCategoria(lista: string[], nome: string): Promise<n
   const movidos = await moverItensDeCategoria(nome, CATEGORIA_RESERVA);
   await salvarCategorias(removerDaLista(lista, nome));
   return movidos;
+}
+
+/* ---------------- Conexão com a planilha (RN02) ---------------- */
+
+export interface AnaliseConexao {
+  situacao: SituacaoConexao;
+  /** Itens ativos deste aparelho (perdidos se ele trocar de cofre). */
+  itensAqui: number;
+  /** Itens ativos na planilha. */
+  itensPlanilha: number;
+}
+
+export async function analisarConexao(previa: PreviaConexao): Promise<AnaliseConexao> {
+  const remoto = (previa.dados.cofre ?? [])[0] as Cofre | undefined;
+  const ativos = (lista: ItemCifrado[]) => lista.filter((i) => i.status !== 'excluido').length;
+  return {
+    situacao: compararCofres(await lerCofre(), remoto),
+    itensAqui: ativos(await listarTodos('itens')),
+    itensPlanilha: ativos((previa.dados.itens ?? []) as ItemCifrado[]),
+  };
+}
+
+/**
+ * Conecta. Com cofres diferentes, só conecta se `trocarCofreDesteAparelho` for true: apaga o cofre
+ * deste aparelho e passa a usar o da planilha (pedirá a senha mestra dele).
+ */
+export async function conectarCofre(previa: PreviaConexao, trocarCofreDesteAparelho = false) {
+  const { situacao } = await analisarConexao(previa);
+  if (situacao === 'cofres-diferentes') {
+    if (!trocarCofreDesteAparelho) throw new Error('Este aparelho tem um cofre diferente do que está na planilha.');
+    trancar();
+    await apagarCofreLocal();
+  }
+  await confirmarConexao(previa);
 }

@@ -27,9 +27,12 @@ Google entra depois.
 - Publicar e **instalar no celular, tablet e PC**.
 - **Resultado:** o app instalado nos aparelhos (cada um com dados separados por enquanto).
 
-## Etapa 4 — Sincronização com a planilha do Google
+## Etapa 4 — Sincronização com a planilha do Google ✅ app pronto (falta o usuário autorizar o script)
 - Backend (Apps Script) com as abas ITENS e COFRE, guardando só os dados criptografados.
 - Fluxo de "novo aparelho": conectar a planilha → baixar o cofre → pedir a senha mestra.
+- Proteção: antes de conectar, o app confere o cofre da planilha; cofres diferentes nunca são misturados.
+- Se o cofre for trocado em outro aparelho (ex.: nova senha mestra), este aparelho tranca sozinho.
+- Apps Script "Meus Acessos API" na conta pessoal (script 1-PsrEK3Z…, implantação AKfycby128l…).
 - **Resultado:** os mesmos dados no celular, tablet e PC; perder o celular não perde nada.
 
 ## Etapa 5 — Segurança extra

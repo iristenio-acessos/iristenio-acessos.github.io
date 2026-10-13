@@ -209,3 +209,8 @@ input.tamanho { width: 100%; accent-color: var(--primaria); min-height: 32px; }
 .lista-categorias small { color: var(--texto-2); margin-left: 6px; }
 .cartao .linha .botao svg { width: 20px; height: 20px; }
 .forca small { color: var(--texto-2); font-weight: 400; }
+
+/* ============ Etapa 4: conectar na tela de entrada ============ */
+.cartao-cofre .link { align-self: center; }
+.link.centro { margin: 0 auto; }
+.cartao-cofre .formulario { gap: 14px; }

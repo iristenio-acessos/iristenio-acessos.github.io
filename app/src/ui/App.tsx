@@ -70,9 +70,6 @@ function Estrutura() {
           <ConteudoPainel key={painel.id ?? painel.novo} painel={painel} />
         </PainelLateral>
       )}
-      <AvisoDesfazer />
-      <AvisoAtualizacao />
-      <Dialogo />
     </div>
   );
 }
@@ -91,6 +88,10 @@ export function App() {
   return (
     <ProvedorEstado>
       <Portao />
+      {/* Fora do Portão: também servem às telas de entrada (criar cofre / conectar) */}
+      <AvisoDesfazer />
+      <AvisoAtualizacao />
+      <Dialogo />
     </ProvedorEstado>
   );
 }

@@ -3,7 +3,8 @@ import { useEffect, useState } from 'preact/hooks';
 import type { Config, Tema } from '../../dominio/tipos';
 import { salvarConfig } from '../../dados/repositorio';
 import { useConfig } from '../../dados/ganchos';
-import { baixarTudo, conectar, desconectar, ErroApi, sincronizar } from '../../sync/motor';
+import { baixarTudo, desconectar, sincronizar } from '../../sync/motor';
+import { conectarComConferencia } from '../acoes/conexao';
 import { APP } from '../../app.config';
 import { descreverUltimaSync, ROTULO_STATUS, useSync } from '../../sync/ganchos';
 import { useEstado } from '../estado';
@@ -23,13 +24,7 @@ export function TelaAjustes() {
         <CartaoSeguranca />
         <CartaoCategorias />
         <CartaoPreferencias />
-        <section class="cartao">
-          <h2>Sincronização com o Google</h2>
-          <p class="dica">
-            Em breve: backup na sua planilha do Google (só com dados criptografados) e os mesmos acessos no celular,
-            tablet e PC. Por enquanto, os dados ficam só neste aparelho.
-          </p>
-        </section>
+        <CartaoGoogle />
         <CartaoAparelho />
       </div>
     </>
@@ -68,9 +63,10 @@ function CartaoSeguranca() {
   );
 }
 
-/* ---------------- Conexão com o Google (Etapa 4) ---------------- */
+/* ---------------- Conexão com o Google ---------------- */
 
-export function CartaoGoogle() {
+/** `naEntrada`: versão compacta usada na tela de primeiro uso ("Já tenho um cofre em outro aparelho"). */
+export function CartaoGoogle({ naEntrada = false }: { naEntrada?: boolean }) {
   const sync = useSync();
   const { avisar, perguntar } = useEstado();
   const [codigo, setCodigo] = useState('');
@@ -88,11 +84,13 @@ export function CartaoGoogle() {
     setOcupado(true);
     setErro('');
     try {
-      await conectar(codigo);
-      setCodigo('');
-      avisar({ texto: 'Conectado ao Google! Seus dados estão sendo enviados à planilha.' });
+      const mensagem = await conectarComConferencia(codigo, perguntar);
+      if (mensagem) {
+        setCodigo('');
+        avisar({ texto: mensagem });
+      }
     } catch (x) {
-      setErro(x instanceof ErroApi ? x.message : 'Não foi possível conectar.');
+      setErro(x instanceof Error ? x.message : 'Não foi possível conectar.');
     } finally {
       setOcupado(false);
     }
@@ -102,7 +100,7 @@ export function CartaoGoogle() {
     const r = await perguntar(
       'Desconectar deste aparelho?',
       [{ valor: 'sim', rotulo: 'Desconectar', estilo: 'perigo' }],
-      'Os dados continuam aqui e na planilha. Alterações feitas depois ficarão só neste aparelho até conectar de novo.',
+      'O cofre continua neste aparelho e na planilha. Alterações feitas depois ficarão só neste aparelho até conectar de novo.',
     );
     if (r) await desconectar();
   }
@@ -117,13 +115,14 @@ export function CartaoGoogle() {
   const conectado = sync.status !== 'desconectado';
 
   return (
-    <section class="cartao">
-      <h2>Sincronização com o Google</h2>
+    <section class={naEntrada ? '' : 'cartao'}>
+      {!naEntrada && <h2>Sincronização com o Google</h2>}
       {!conectado ? (
         <form class="formulario" onSubmit={aoConectar}>
           <p class="dica">
-            Conecte o app à sua conta Google para guardar tudo numa planilha (backup) e sincronizar entre os seus
-            aparelhos.
+            {naEntrada
+              ? 'Cole o código de conexão da sua planilha. O app baixa o cofre (criptografado) e pede a sua senha mestra.'
+              : 'Conecte à sua planilha do Google para ter backup e usar o mesmo cofre no celular, tablet e PC. A planilha recebe só dados criptografados: sem a senha mestra, ninguém consegue ler.'}
           </p>
           <textarea
             class="campo codigo"
@@ -138,9 +137,15 @@ export function CartaoGoogle() {
           {erro && <p class="erros" role="alert">{erro}</p>}
           <div class="linha">
             <button type="submit" class="botao primario" disabled={ocupado || !codigo.trim()}>
-              {ocupado ? 'Conectando…' : 'Conectar'}
+              {ocupado ? 'Conferindo a planilha…' : 'Conectar'}
             </button>
           </div>
+          {!naEntrada && (
+            <p class="dica">
+              Onde achar o código: no editor do Apps Script, execute <strong>configurar</strong> e copie a linha que começa
+              com APP1: no registro de execução.
+            </p>
+          )}
         </form>
       ) : (
         <div class="sync-painel">

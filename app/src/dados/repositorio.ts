@@ -205,6 +205,22 @@ export async function salvarConfig(parcial: Partial<Config>) {
   avisarMudanca();
 }
 
+/**
+ * Apaga o cofre DESTE aparelho (itens, cofre e fila de envio) — usado só quando o usuário escolhe
+ * trocar um cofre local por outro, diferente, que está na planilha. Não mexe na planilha.
+ */
+export async function apagarCofreLocal() {
+  const db = await abrirBanco();
+  const tx = db.transaction(['itens', 'cofre', 'fila_sync', 'config'], 'readwrite');
+  await tx.objectStore('itens').clear();
+  await tx.objectStore('cofre').clear();
+  await tx.objectStore('fila_sync').clear();
+  await tx.objectStore('config').delete('_cursor');
+  await tx.objectStore('config').delete('_tentativas');
+  await tx.done;
+  avisarMudanca();
+}
+
 /* ---------------- Dados iniciais ---------------- */
 
 /**

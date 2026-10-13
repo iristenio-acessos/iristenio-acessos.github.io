@@ -147,18 +147,35 @@ async function chamar(conexao: Conexao, corpo: object): Promise<RespostaSync> {
 
 /* ---------------- Conectar / desconectar ---------------- */
 
-/** Testa o código de conexão e, se funcionar, guarda e dispara a primeira sincronização. */
-export async function conectar(codigo: string): Promise<void> {
+/** O que a planilha tem, antes de conectar de verdade (nada é gravado no aparelho). */
+export interface PreviaConexao {
+  conexao: Conexao;
+  dados: Partial<Record<Entidade, Registro[]>>;
+}
+
+/** Testa o código e baixa o conteúdo da planilha para conferência, SEM enviar nada nem conectar. */
+export async function prepararConexao(codigo: string): Promise<PreviaConexao> {
   const conexao = decodificarCodigo(codigo);
   if (!conexao) throw new ErroApi('Código de conexão inválido. Ele começa com "APP1:".');
   if (/\/dev\/?$/.test(conexao.url)) {
     throw new ErroApi('Este código aponta para o endereço de teste do Apps Script (/dev), que exige login. Execute configurar() de novo para gerar um código com o endereço público.');
   }
   const r = await chamar(conexao, { acao: 'ping' });
-  await salvarInterno('_conexao', { ...conexao, planilha: r.planilha });
+  const tudo = await chamar(conexao, { acao: 'sincronizar', cursor: null, operacoes: [] });
+  return { conexao: { ...conexao, planilha: r.planilha }, dados: tudo.dados ?? {} };
+}
+
+/** Guarda a conexão e dispara a primeira sincronização (envia o que há aqui e baixa o resto). */
+export async function confirmarConexao(previa: PreviaConexao): Promise<void> {
+  await salvarInterno('_conexao', previa.conexao);
   await salvarInterno('_cursor', undefined);
-  definir({ planilha: r.planilha ?? null, erro: null });
+  definir({ planilha: previa.conexao.planilha ?? null, erro: null });
   await sincronizar();
+}
+
+/** Testa o código de conexão e, se funcionar, guarda e dispara a primeira sincronização. */
+export async function conectar(codigo: string): Promise<void> {
+  await confirmarConexao(await prepararConexao(codigo));
 }
 
 export async function desconectar() {
