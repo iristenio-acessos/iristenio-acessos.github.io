@@ -1,7 +1,9 @@
 // Ganchos (hooks) da interface para ler dados e se atualizar quando eles mudam.
 import { useEffect, useState } from 'preact/hooks';
 import { aoMudarDados, lerConfig, listarTodos, type MapaEntidades } from './repositorio';
-import { aoMudarSessao, destrancado, listarAbertos } from './sessao';
+import { aoMudarSessao, destrancado, lerPreferencias, listarAbertos } from './sessao';
+import { categoriasEfetivas } from '../dominio/categorias';
+import { CATEGORIAS_PADRAO } from '../dominio/itens';
 import type { Config, Entidade, ItemAberto } from '../dominio/tipos';
 import { CONFIG_PADRAO } from '../dominio/tipos';
 
@@ -43,4 +45,15 @@ type ItensAbertos = { itens: ItemAberto[]; ilegiveis: number; carregado: boolean
 
 export function useItensAbertos(): ItensAbertos {
   return useConsulta<ItensAbertos>(async () => ({ ...(await listarAbertos()), carregado: true }), { itens: [], ilegiveis: 0, carregado: false });
+}
+
+/** Categorias: `guardadas` (lista do cofre) e `todas` (guardadas + alguma usada por item). */
+export function useCategorias(): { guardadas: string[]; todas: string[] } {
+  return useConsulta(
+    async () => {
+      const [{ categorias }, { itens }] = await Promise.all([lerPreferencias(), listarAbertos()]);
+      return { guardadas: categorias, todas: categoriasEfetivas(categorias, itens) };
+    },
+    { guardadas: CATEGORIAS_PADRAO, todas: CATEGORIAS_PADRAO },
+  );
 }

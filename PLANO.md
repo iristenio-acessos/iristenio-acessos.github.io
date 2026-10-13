@@ -15,10 +15,11 @@ Google entra depois.
   crescente depois de 5 senhas erradas.
 - **Resultado:** você já guarda e copia senhas no PC/celular (ainda sem sincronizar).
 
-## Etapa 2 — Campos livres, tipos e categorias
+## Etapa 2 — Campos livres, tipos e categorias ✅ concluída
 - **+ Adicionar campo**, marcar como secreto, renomear, reordenar, remover (caso da Caixa).
 - Categorias padrão + criar novas; filtro por categoria. (Favoritos e busca já vieram na Etapa 1.)
-- Gerador de senha.
+- Gerador de senha (4 a 40 caracteres; senha só de números para banco/cartão).
+- Ajustes → Categorias: criar, renomear (os itens acompanham) e remover (os itens vão para "Outros").
 - **Resultado:** o cofre completo num aparelho.
 
 ## Etapa 3 — Publicar e instalar

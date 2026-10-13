@@ -218,3 +218,28 @@ export const IconeNota = (p: Props) => (
     <path d="M14.5 3v4.5H19M8 12h8M8 16h5" />
   </Base>
 );
+
+export const IconeDado = (p: Props) => (
+  <Base {...p}>
+    <rect x="3.5" y="3.5" width="17" height="17" rx="3.5" />
+    <path d="M8.5 8.5h.01M15.5 8.5h.01M12 12h.01M8.5 15.5h.01M15.5 15.5h.01" stroke-width={3} />
+  </Base>
+);
+
+export const IconeSetaCima = (p: Props) => (
+  <Base {...p}>
+    <path d="M12 19V5M6 11l6-6 6 6" />
+  </Base>
+);
+
+export const IconeSetaBaixo = (p: Props) => (
+  <Base {...p}>
+    <path d="M12 5v14M6 13l6 6 6-6" />
+  </Base>
+);
+
+export const IconeLixeira = (p: Props) => (
+  <Base {...p}>
+    <path d="M4 7h16M10 11v6M14 11v6M5.5 7l1 12a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2l1-12M9 7V4.5h6V7" />
+  </Base>
+);

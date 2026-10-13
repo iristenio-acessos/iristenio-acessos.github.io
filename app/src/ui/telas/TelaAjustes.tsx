@@ -11,6 +11,7 @@ import { aplicarTema } from '../tema';
 import { trancarAgora } from '../trava';
 import { OPCOES_MINUTOS_TRANCAR } from '../../dominio/trava';
 import { IconeCadeado } from '../icones';
+import { CartaoCategorias } from './CartaoCategorias';
 
 export function TelaAjustes() {
   return (
@@ -20,6 +21,7 @@ export function TelaAjustes() {
       </header>
       <div class="conteudo ajustes">
         <CartaoSeguranca />
+        <CartaoCategorias />
         <CartaoPreferencias />
         <section class="cartao">
           <h2>Sincronização com o Google</h2>

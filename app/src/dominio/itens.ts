@@ -125,3 +125,39 @@ export function novoItemAberto(id: Id, conteudo: ConteudoItem, agora = new Date(
   const carimbo = agora.toISOString();
   return { id, status: 'ativo', criado_em: carimbo, atualizado_em: carimbo, conteudo };
 }
+
+/* ---------------- Campos livres (RN: "+ Adicionar campo") ---------------- */
+
+/** Sugestões ao adicionar um campo (secreto = já vem escondido). */
+export const SUGESTOES_CAMPOS: Campo[] = [
+  c('Senha de transação', true),
+  c('Senha do cartão', true),
+  c('PIN', true),
+  c('Código de recuperação', true),
+  c('Pergunta de segurança'),
+  c('Resposta de segurança', true),
+  c('E-mail'),
+  c('Telefone'),
+  c('Agência'),
+  c('Conta'),
+];
+
+export function adicionarCampo(campos: Campo[], rotulo: string, secreto: boolean): Campo[] {
+  return [...campos, { rotulo: rotulo.trim(), valor: '', secreto }];
+}
+
+export function moverCampo(campos: Campo[], de: number, para: number): Campo[] {
+  if (para < 0 || para >= campos.length || de === para) return campos;
+  const nova = [...campos];
+  const [campo] = nova.splice(de, 1);
+  nova.splice(para, 0, campo);
+  return nova;
+}
+
+export function removerCampo(campos: Campo[], n: number): Campo[] {
+  return campos.filter((_, i) => i !== n);
+}
+
+export function alterarCampo(campos: Campo[], n: number, parcial: Partial<Campo>): Campo[] {
+  return campos.map((x, i) => (i === n ? { ...x, ...parcial } : x));
+}

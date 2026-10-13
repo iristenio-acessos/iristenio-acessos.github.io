@@ -60,3 +60,16 @@ describe('itens', () => {
     expect(await abrirItem(chave, fechado)).toEqual(aberto);
   });
 });
+
+describe('campos livres', () => {
+  const base = [{ rotulo: 'A', valor: '1', secreto: false }, { rotulo: 'B', valor: '2', secreto: true }];
+  it('adiciona no fim, move, altera e remove', async () => {
+    const { adicionarCampo, moverCampo, removerCampo, alterarCampo } = await import('./itens');
+    const com = adicionarCampo(base, ' Senha de transação ', true);
+    expect(com[2]).toEqual({ rotulo: 'Senha de transação', valor: '', secreto: true });
+    expect(moverCampo(com, 2, 0).map((x) => x.rotulo)).toEqual(['Senha de transação', 'A', 'B']);
+    expect(moverCampo(com, 0, -1)).toBe(com);
+    expect(alterarCampo(base, 0, { secreto: true })[0].secreto).toBe(true);
+    expect(removerCampo(base, 0)).toEqual([base[1]]);
+  });
+});

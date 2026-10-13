@@ -1,7 +1,8 @@
 // Tela principal: busca + lista de itens, com atalhos para copiar (ex.: usuário e senha).
 import { useState } from 'preact/hooks';
 import { camposAtalho, filtrarItens, ordenarItens } from '../../dominio/itens';
-import { useItensAbertos } from '../../dados/ganchos';
+import { contarPorCategoria } from '../../dominio/categorias';
+import { useCategorias, useItensAbertos } from '../../dados/ganchos';
 import { useEstado } from '../estado';
 import { trancarAgora } from '../trava';
 import { BotaoCopiar } from '../componentes/BotaoCopiar';
@@ -11,9 +12,15 @@ import { IconeBusca, IconeCadeado, IconeChave, IconeEstrela, IconeFechar } from 
 export function TelaAcessos() {
   const { abrirPainel, painel } = useEstado();
   const { itens, ilegiveis, carregado } = useItensAbertos();
+  const { todas } = useCategorias();
   const [busca, setBusca] = useState('');
+  const [categoria, setCategoria] = useState<string | null>(null);
   const ativos = ordenarItens(itens);
-  const lista = filtrarItens(ativos, busca);
+  const contagem = contarPorCategoria(ativos);
+  // Só categorias com itens, na ordem da lista de categorias
+  const comItens = todas.filter((c) => contagem.has(c));
+  const filtro = categoria && contagem.has(categoria) ? categoria : null;
+  const lista = filtrarItens(filtro ? ativos.filter((i) => i.conteudo.categoria === filtro) : ativos, busca);
 
   return (
     <>
@@ -47,6 +54,19 @@ export function TelaAcessos() {
           </div>
         )}
 
+        {comItens.length > 1 && (
+          <div class="chips filtro-categorias" role="group" aria-label="Filtrar por categoria">
+            <button class="chip" aria-pressed={!filtro} onClick={() => setCategoria(null)}>
+              Todas <small>{ativos.length}</small>
+            </button>
+            {comItens.map((c) => (
+              <button key={c} class="chip" aria-pressed={filtro === c} onClick={() => setCategoria(filtro === c ? null : c)}>
+                {c} <small>{contagem.get(c)}</small>
+              </button>
+            ))}
+          </div>
+        )}
+
         {ilegiveis > 0 && (
           <p class="alerta" role="alert">
             {ilegiveis} {ilegiveis === 1 ? 'item não pôde ser aberto' : 'itens não puderam ser abertos'} com esta senha mestra.
@@ -63,7 +83,7 @@ export function TelaAcessos() {
           <div class="vazio">
             <IconeBusca />
             <strong>Nada encontrado</strong>
-            Nenhum item com “{busca}”.
+            {busca ? `Nenhum item com “${busca}”${filtro ? ` em ${filtro}` : ''}.` : `Nenhum item em ${filtro}.`}
           </div>
         ) : (
           <ul class="lista-acessos">
@@ -79,6 +99,7 @@ export function TelaAcessos() {
                     class={`linha-acesso${selecionado ? ' selecionada' : ''}`}
                     role="button"
                     tabIndex={0}
+                    aria-label={`Abrir ${c.nome}`}
                     onClick={() => abrirPainel({ tipo: 'item', id: i.id })}
                     onKeyDown={(e) => e.key === 'Enter' && e.target === e.currentTarget && abrirPainel({ tipo: 'item', id: i.id })}
                   >

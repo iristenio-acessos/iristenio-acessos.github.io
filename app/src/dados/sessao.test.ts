@@ -71,3 +71,23 @@ describe('sessão do cofre', () => {
     expect((await listarAbertos()).itens[0].status).toBe('excluido');
   });
 });
+
+describe('categorias do cofre', () => {
+  it('ficam criptografadas no cofre; renomear e remover movem os itens', async () => {
+    const { lerPreferencias, salvarCategorias, renomearCategoria, removerCategoria } = await import('./sessao');
+    await criarNovoCofre(SENHA);
+    await gravarItem({ ...caixa(), conteudo: { ...caixa().conteudo, categoria: 'Bancos' } });
+    await salvarCategorias([...(await lerPreferencias()).categorias, 'Clube do Livro']);
+    const db = await abrirBanco();
+    expect(JSON.stringify(await db.getAll('cofre'))).not.toContain('Clube');
+    expect((await lerPreferencias()).categorias).toContain('Clube do Livro');
+
+    await renomearCategoria((await lerPreferencias()).categorias, 'Bancos', 'Meus bancos');
+    expect((await listarAbertos()).itens[0].conteudo.categoria).toBe('Meus bancos');
+    expect((await lerPreferencias()).categorias).toContain('Meus bancos');
+
+    expect(await removerCategoria((await lerPreferencias()).categorias, 'Meus bancos')).toBe(1);
+    expect((await listarAbertos()).itens[0].conteudo.categoria).toBe('Outros');
+    expect((await lerPreferencias()).categorias).not.toContain('Meus bancos');
+  });
+});

@@ -2,7 +2,8 @@
 // Trancar = esquecer a chave (e a tela deixa de mostrar qualquer dado aberto).
 import type { Cofre, ItemAberto, ItemCifrado } from '../dominio/tipos';
 import { ID_COFRE } from '../dominio/tipos';
-import { abrirCofre, criarCofre } from '../dominio/cripto';
+import { abrirCofre, cifrar, criarCofre, decifrar } from '../dominio/cripto';
+import { CATEGORIA_RESERVA, itensDaCategoria, normalizarCategorias, preferenciasPadrao, removerDaLista, renomearNaLista, type PreferenciasCofre } from '../dominio/categorias';
 import { abrirItem, fecharItem } from '../dominio/itens';
 import { esperaAposErros } from '../dominio/trava';
 import { buscar, gravar, lerInterno, listarTodos, salvar, salvarInterno } from './repositorio';
@@ -105,4 +106,49 @@ export async function restaurarItem(anterior: ItemCifrado | undefined, id: strin
     const atual = await buscar('itens', id);
     if (atual) await gravar([{ entidade: 'itens', registro: { ...atual, status: 'excluido' }, operacao: 'excluir' }]);
   }
+}
+
+/* ---------------- Preferências do cofre (categorias) — criptografadas no registro do cofre ---------------- */
+
+export async function lerPreferencias(): Promise<PreferenciasCofre> {
+  const k = chave;
+  const cofre = await lerCofre();
+  if (!k || !cofre?.cifrado) return preferenciasPadrao();
+  try {
+    const salvo = JSON.parse(await decifrar(k, cofre.cifrado)) as Partial<PreferenciasCofre>;
+    return { ...preferenciasPadrao(), ...salvo, categorias: normalizarCategorias(salvo.categorias ?? preferenciasPadrao().categorias) };
+  } catch {
+    return preferenciasPadrao();
+  }
+}
+
+export async function salvarCategorias(categorias: string[]) {
+  const cofre = await lerCofre();
+  if (!cofre) throw new Error('Cofre não encontrado.');
+  const prefs = { ...(await lerPreferencias()), categorias: normalizarCategorias(categorias) };
+  await salvar('cofre', { ...cofre, cifrado: await cifrar(chaveAtual(), JSON.stringify(prefs)) });
+}
+
+/** Troca a categoria de todos os itens (inclusive excluídos, para o "Desfazer" não ressuscitar a antiga). */
+export async function moverItensDeCategoria(de: string, para: string): Promise<number> {
+  const k = chaveAtual();
+  const { itens } = await listarAbertos();
+  const afetados = itensDaCategoria(itens, de);
+  if (!afetados.length) return 0;
+  const cifrados = await Promise.all(
+    afetados.map((i) => fecharItem(k, { ...i, conteudo: { ...i.conteudo, categoria: para } })),
+  );
+  await gravar(cifrados.map((registro) => ({ entidade: 'itens' as const, registro })));
+  return afetados.filter((i) => i.status !== 'excluido').length;
+}
+
+export async function renomearCategoria(lista: string[], de: string, para: string) {
+  await moverItensDeCategoria(de, para.trim());
+  await salvarCategorias(renomearNaLista(lista, de, para));
+}
+
+export async function removerCategoria(lista: string[], nome: string): Promise<number> {
+  const movidos = await moverItensDeCategoria(nome, CATEGORIA_RESERVA);
+  await salvarCategorias(removerDaLista(lista, nome));
+  return movidos;
 }
